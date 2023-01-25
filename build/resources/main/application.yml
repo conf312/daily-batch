@@ -1,0 +1,14 @@
+spring:
+  batch:
+    job:
+      enabled: false
+    jdbc:
+      initialize-schema: always
+  datasource:
+    driverClassName: com.mysql.cj.jdbc.Driver
+    url: jdbc:mysql://61.102.114.235:3306/daily_product
+    username: admin
+    password: venh1##
+logging:
+  level:
+    root: info

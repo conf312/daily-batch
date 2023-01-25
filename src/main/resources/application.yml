@@ -1,0 +1,11 @@
+spring:
+  batch:
+    job:
+      enabled: false
+    jdbc:
+      initialize-schema: always
+  datasource:
+    driverClassName: com.mysql.cj.jdbc.Driver
+logging:
+  level:
+    root: info
