@@ -11,8 +11,10 @@ import org.springframework.batch.core.configuration.annotation.StepScope;
 import org.springframework.batch.item.ItemProcessor;
 import org.springframework.batch.item.ItemReader;
 import org.springframework.batch.item.ItemWriter;
+import org.springframework.batch.item.database.JpaPagingItemReader;
 import org.springframework.batch.item.database.builder.JpaItemWriterBuilder;
 import org.springframework.batch.item.database.builder.JpaPagingItemReaderBuilder;
+import org.springframework.batch.repeat.RepeatStatus;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -31,14 +33,28 @@ public class LivestockBatchConfig {
         this.entityManagerFactory = entityManagerFactory;
     }
 
-    // exampleJob 생성
+    @Bean
+    public Job TaskletJob() {
+        Job customJob = jobBuilderFactory.get("taskletJob")
+            .start(TaskStep())
+            .build();
+        return customJob;
+    }
+
+    @Bean
+    public Step TaskStep() {
+        return stepBuilderFactory.get("taskletStep")
+            .tasklet((contribution, chunkContext) ->{
+                return RepeatStatus.FINISHED;
+            }).build();
+    }
+
     @Bean
     public Job exampleJob() throws Exception {
         return jobBuilderFactory.get("exampleJob")
             .start(exampleStep()).build();
     }
 
-    // exampleStep 생성
     @Bean
     @JobScope
     public Step exampleStep() throws Exception {
@@ -52,30 +68,31 @@ public class LivestockBatchConfig {
 
     @Bean
     @StepScope
-    public ItemReader<? extends Livestock> reader(@Value("#{jobParameters[requestDate]}") String requestDate) throws Exception {
-        log.info("==> 111 reader value : " + requestDate);
+    public JpaPagingItemReader<Livestock> reader(@Value("#{jobParameters[requestDate]}") String requestDate) throws Exception {
+        log.info("==> reader value : " + requestDate);
 
 //        Map<String, Object> parameterValues = new HashMap<>();
 //        parameterValues.put("price", 1000);
 
-        return new JpaPagingItemReaderBuilder<Livestock>()
+        JpaPagingItemReader<Livestock> list = new JpaPagingItemReaderBuilder<Livestock>()
             .name("JpaPagingItemReader")
             .entityManagerFactory(entityManagerFactory)
-            .queryString("select id from livestock where id = 22")
+            .queryString("select l from livestock l where c.id = 22")
             .pageSize(10)
             //.parameterValues(parameterValues)
             .build();
+
+        return list;
     }
 
     @Bean
     @StepScope
-    public ItemProcessor<? super Livestock, ? extends Livestock> processor(@Value("#{jobParameters[requestDate]}") String requestDate) {
+    public ItemProcessor<Livestock, Livestock> processor(@Value("#{jobParameters[requestDate]}") String requestDate) {
         return new ItemProcessor <Livestock, Livestock> () {
             @Override
             public Livestock process(Livestock livestock) throws Exception {
                 log.info("==> processor Livestock : " + livestock);
                 log.info("==> processor value : " + requestDate);
-
                 // 100원 추가
                 //market.setPrice(market.getPrice() + 100);
                 return livestock;
@@ -85,7 +102,7 @@ public class LivestockBatchConfig {
 
     @Bean
     @StepScope
-    public ItemWriter<? super Livestock> writer(@Value("#{jobParameters[requestDate]}") String requestDate) {
+    public ItemWriter<Livestock> writer(@Value("#{jobParameters[requestDate]}") String requestDate) {
         log.info("==> writer value : " + requestDate);
         return new JpaItemWriterBuilder<Livestock>()
             .entityManagerFactory(entityManagerFactory)

@@ -2,13 +2,15 @@ package com.daily.product.batch.domain;
 
 import lombok.Builder;
 import lombok.Getter;
+import lombok.NoArgsConstructor;
 import lombok.Setter;
 import javax.persistence.*;
 
+@NoArgsConstructor
 @Setter
 @Getter
 @Entity(name = "livestock")
-//@Table(name = "livestock", catalog = "daily_product")
+@Table(name = "livestock", catalog = "daily_product")
 public class Livestock {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -26,7 +28,6 @@ public class Livestock {
     private String autonomousCode;
     private String autonomousName;
     private String checkDate;
-
 
     @Builder
     public Livestock(Long id, Long no, String placeCode, String placeName, String productCode, String productName, String standard, Long price, String remarks, String marketTypeCode, String marketTypeName, String autonomousCode, String autonomousName, String checkDate) {
